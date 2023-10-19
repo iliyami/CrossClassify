@@ -33,6 +33,7 @@ dependencies:
   matomo_tracker:
     git:
       url: https://github.com/iliyami/matomo-tracker
+  uuid: ^3.0.7
 
 dev_dependencies:
   flutter_test:
