@@ -357,7 +357,7 @@ packages:
     description:
       path: "."
       ref: HEAD
-      resolved-ref: fce4a08ff0e604995f5e6f647f073ee3fa61b1ca
+      resolved-ref: b08b3828c09a6f7dccd9dac0636d450f00c83228
       url: "https://github.com/iliyami/matomo-tracker"
     source: git
     version: "4.1.1"
