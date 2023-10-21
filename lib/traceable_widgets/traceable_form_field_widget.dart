@@ -2,12 +2,12 @@ import 'package:cross_classify_sdk/cross_classify.dart';
 import 'package:flutter/material.dart';
 
 class ControllableFormFieldWidget extends StatefulWidget {
-  final Widget controllableWidget;
+  final Widget child;
   final FormFieldConfig formFieldConfig;
   const ControllableFormFieldWidget({
     super.key,
     required this.formFieldConfig,
-    required this.controllableWidget,
+    required this.child,
   });
 
   @override
@@ -28,7 +28,7 @@ class _ControllableFormFieldWidgetState
   }
 
   @override
-  Widget build(BuildContext context) => widget.controllableWidget;
+  Widget build(BuildContext context) => widget.child;
 
   @override
   void dispose() {
