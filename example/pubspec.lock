@@ -135,6 +135,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.0.2"
+  json_annotation:
+    dependency: transitive
+    description:
+      name: json_annotation
+      sha256: b10a7b2ff83d83c777edba3c6a0f97045ddadd56c944e1a23a3fdf43a1bf4467
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.8.1"
   lints:
     dependency: transitive
     description:
@@ -164,7 +172,7 @@ packages:
     description:
       path: "."
       ref: HEAD
-      resolved-ref: a97903fc8c30b7114415d472e29c239dcbaac72b
+      resolved-ref: "364d0a186584147d7d148af31686592445e89677"
       url: "https://github.com/iliyami/matomo-tracker"
     source: git
     version: "4.1.1"
