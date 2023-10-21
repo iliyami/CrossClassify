@@ -29,6 +29,9 @@ class CrossClassify {
   Duration? _formHesitationTime;
 
   Future<void> initialize({required String apiKey, required int siteId}) async {
+    if (apiKey.startsWith('#') || siteId == -1) {
+      throw Exception('Please provide your own API key and site ID!');
+    }
     if (_initialized) {
       //TODO handle all exptions properly
       throw Exception('Already Initialized!');
