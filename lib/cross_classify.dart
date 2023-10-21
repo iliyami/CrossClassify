@@ -19,8 +19,8 @@ class CrossClassify {
   bool _initialized = false;
   bool get initialized => _initialized;
 
-  final List<FormFieldModel> formFields = [];
-  final _formInterval = const Duration(seconds: 10);
+  final List<FormFieldModel> _formFields = [];
+  final _formInterval = const Duration(seconds: 30);
   Timer? _timer;
   late final DateTime _startTime;
   late final String? _formName;
@@ -63,11 +63,9 @@ class CrossClassify {
     }
   }
 
-  void setPageViewId(String id) => _pageViewId = id;
-
   void _setDispatchTimer() {
     _timer = Timer.periodic(_formInterval, (timer) {
-      trackForm();
+      _trackForm();
     });
   }
 
@@ -81,14 +79,14 @@ class CrossClassify {
       faFt: config.formFieldType,
       faFn: config.formFieldType,
     );
-    if (formFields.isEmpty) {
+    if (_formFields.isEmpty) {
       _setDispatchTimer();
       _subscribeFormHesitationTime(formField);
     }
 
     _registerFocusNode(formField);
     _registerTextController(formField);
-    formFields.add(formField);
+    _formFields.add(formField);
   }
 
   void _registerTextController(FormFieldModel formField) {
@@ -127,21 +125,21 @@ class CrossClassify {
   }
 
   void _disposeNodeController(int index) {
-    formFields[index].controller.dispose();
-    formFields[index].node.dispose();
+    _formFields[index].controller.dispose();
+    _formFields[index].node.dispose();
   }
 
   void removeFormField(String id) {
-    final index = formFields.indexWhere((element) => element.id == id);
-    if (formFields.isEmpty) {
+    final index = _formFields.indexWhere((element) => element.id == id);
+    if (_formFields.isEmpty) {
       _disposeDispatchTimer();
     }
-    formFields[index].controller.clear();
-    formFields.removeAt(index);
+    _formFields[index].controller.clear();
+    _formFields.removeAt(index);
   }
 
   void onFormSubmit() {
-    trackForm();
+    _trackForm();
     _disposeDispatchTimer();
   }
 
@@ -150,7 +148,7 @@ class CrossClassify {
   }
 
   void _calculateFieldsContentData() {
-    for (var field in formFields) {
+    for (var field in _formFields) {
       final text = field.controller.text;
       if (field.trackContent) {
         field.faCn = text;
@@ -166,14 +164,14 @@ class CrossClassify {
     }
   }
 
-  void trackForm() {
+  void _trackForm() {
     _calculateFieldsContentData();
     final FormModel formModel = FormModel(
       faSt: _startTime.millisecondsSinceEpoch.toString(),
       faVid: _pageViewId,
       faTs: _getTimeSpent(),
       faHt: _formHesitationTime?.inMilliseconds.toString(),
-      faFields: formFields,
+      faFields: _formFields,
     );
     // for (final fields in formFields) {
     //   debugPrint('type: ${fields.faFt} - content: ${fields.faCn}');
@@ -201,7 +199,7 @@ class CrossClassify {
 
   void dispose() {
     _disposeDispatchTimer();
-    for (var i = 0; i < formFields.length; i++) {
+    for (var i = 0; i < _formFields.length; i++) {
       _disposeNodeController(i);
     }
   }
