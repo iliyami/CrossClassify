@@ -23,6 +23,8 @@ class CrossClassify {
   final _formInterval = const Duration(seconds: 10);
   Timer? _timer;
   late final DateTime _startTime;
+  late final String? _formName;
+  late final PerformanceInfo? _performanceInfo;
   late final String _pageViewId;
   Duration? _formHesitationTime;
 
@@ -42,10 +44,16 @@ class CrossClassify {
     _initialized = true;
   }
 
-  void initForm(String pvId) {
+  void initForm({
+    required String pvId,
+    required String? formName,
+    required PerformanceInfo? performanceInfo,
+  }) {
     _checkServiceInitialization();
     _startTime = DateTime.now();
     _pageViewId = pvId;
+    _formName = formName;
+    _performanceInfo = performanceInfo;
   }
 
   void _checkServiceInitialization() {
@@ -176,7 +184,12 @@ class CrossClassify {
     //   debugPrint('field hesitation time: ${fields.faFht}');
     //   debugPrint('field spent time: ${fields.faFts}');
     // }
-    MatomoTracker.instance.trackCustomForm(customActions: formModel.toJson());
+    MatomoTracker.instance.trackCustomAction(
+      actionName: _formName,
+      pvId: _pageViewId,
+      performanceInfo: _performanceInfo,
+      customActions: formModel.toJson(),
+    );
   }
 
   String _getTimeSpent() =>

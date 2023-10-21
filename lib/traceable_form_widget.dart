@@ -3,8 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:matomo_tracker/utils/random_alpha_numeric.dart';
 
 class TraceableForm extends StatefulWidget {
-  const TraceableForm({super.key, required this.child});
+  const TraceableForm({
+    super.key,
+    this.formName,
+    this.path,
+    this.performanceInfo,
+    required this.child,
+  });
 
+  final String? formName;
+  final String? path;
+  final PerformanceInfo? performanceInfo;
   final Widget child;
 
   @override
@@ -23,14 +32,17 @@ class _TraceableFormState extends State<TraceableForm> {
   /// For more information see `pvId` in [CrossClassify.trackForm]
   /// {@endtemplate}
   @protected
-  String get pvId => _pvId;
   final String _pvId = randomAlphaNumeric(6);
   CrossClassify get crossClassify => CrossClassify.instance;
 
   @override
   void initState() {
     super.initState();
-    crossClassify.initForm(pvId);
+    crossClassify.initForm(
+      formName: widget.formName,
+      pvId: _pvId,
+      performanceInfo: widget.performanceInfo,
+    );
   }
 
   @override
