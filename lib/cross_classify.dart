@@ -1,8 +1,10 @@
 import 'dart:async';
 
+import 'package:cross_classify_sdk/models/form_models.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:matomo_tracker/matomo_tracker.dart';
+import 'package:uuid/uuid.dart';
 export 'package:matomo_tracker/matomo_tracker.dart';
 
 RouteObserver<ModalRoute<void>> get crossClassifyObserver => matomoObserver;
@@ -17,14 +19,17 @@ class CrossClassify {
   bool _initialized = false;
   bool get initialized => _initialized;
 
-  final Map<String, FormFieldConfig> formFields = {};
-  final _formInterval = const Duration(seconds: 30);
+  final List<FormFieldModel> formFields = [];
+  final _formInterval = const Duration(seconds: 10);
   Timer? _timer;
+  late final DateTime _startTime;
+  late final String _pageViewId;
+  Duration? _formHesitationTime;
 
   Future<void> initialize({required String apiKey, required int siteId}) async {
     if (_initialized) {
-      //TODO
-      throw UnimplementedError();
+      //TODO handle all exptions properly
+      throw Exception('Already Initialized!');
     }
 
     await MatomoTracker.instance.initialize(
@@ -37,54 +42,154 @@ class CrossClassify {
     _initialized = true;
   }
 
+  void initForm(String pvId) {
+    _checkServiceInitialization();
+    _startTime = DateTime.now();
+    _pageViewId = pvId;
+  }
+
+  void _checkServiceInitialization() {
+    if (_initialized == false) {
+      throw Exception('''The Cross Classify service has not been started yet!
+          Call CrossClassify.instance.initialize to initialize the service.''');
+    }
+  }
+
+  void setPageViewId(String id) => _pageViewId = id;
+
   void _setDispatchTimer() {
     _timer = Timer.periodic(_formInterval, (timer) {
-      _apiCall();
+      trackForm();
     });
   }
 
-  void addFormField(String key, FormFieldConfig formFieldModel) {
-    if (formFields[key] != null) {
-      //TODO Refactor all exceptions
-      throw Exception("There is an existing form with this key!");
-    }
+  void addFormField(FormFieldConfig config) {
+    _checkServiceInitialization();
+    final formField = FormFieldModel(
+      id: config.id,
+      trackContent: config.trackContent,
+      controller: config.controller,
+      node: config.node,
+      faFt: config.formFieldType,
+      faFn: config.formFieldType,
+    );
     if (formFields.isEmpty) {
       _setDispatchTimer();
+      _subscribeFormHesitationTime(formField);
     }
-    formFields[key] = formFieldModel;
+
+    _registerFocusNode(formField);
+    _registerTextController(formField);
+    formFields.add(formField);
   }
 
-  void removeFormField(String key) {
-    final model = formFields.remove(key);
-    if (model == null) {
-      throw Exception("There is not a form field model with this key!");
-    } else {
-      if (formFields.isEmpty) {
-        _disposeDispatchTimer();
+  void _registerTextController(FormFieldModel formField) {
+    return formField.controller.addListener(() {
+      final text = formField.controller.text;
+      if (formField.faCn != text) {
+        formField.faFts = _timeSinceStart().inMilliseconds;
+        formField.faFch++;
       }
-      model.controller.dispose();
+      if (formField.faFht == null && text.isNotEmpty) {
+        formField.faFht = _timeSinceStart().inMilliseconds;
+      }
+      if (formField.faCn != null && formField.faCn!.length > text.length) {
+        formField.faFd++;
+      }
+      formField.faCn = text;
+    });
+  }
+
+  void _registerFocusNode(FormFieldModel formField) {
+    formField.node.addListener(() {
+      if (formField.node.hasFocus) {
+        formField.faFf++;
+        formField.faFcu++;
+      }
+    });
+  }
+
+  void _subscribeFormHesitationTime(FormFieldModel formField) {
+    formField.controller.addListener(() {
+      if (_formHesitationTime == null && formField.controller.text.isNotEmpty) {
+        _formHesitationTime = _timeSinceStart();
+        formField.faFht = _formHesitationTime!.inMilliseconds;
+      }
+    });
+  }
+
+  void _disposeNodeController(int index) {
+    formFields[index].controller.dispose();
+    formFields[index].node.dispose();
+  }
+
+  void removeFormField(String id) {
+    final index = formFields.indexWhere((element) => element.id == id);
+    if (formFields.isEmpty) {
+      _disposeDispatchTimer();
     }
+    formFields[index].controller.clear();
+    formFields.removeAt(index);
   }
 
   void onFormSubmit() {
-    _apiCall();
+    trackForm();
     _disposeDispatchTimer();
-  }
-
-  void dispose() {
-    _disposeDispatchTimer();
-    for (final element in formFields.entries) {
-      element.value.controller.dispose();
-    }
   }
 
   void _disposeDispatchTimer() {
     _timer?.cancel();
   }
 
-  void _apiCall() {
-    for (final fields in formFields.entries) {
-      print('${fields.value.formFieldType}: ${fields.value.controller.text}');
+  void _calculateFieldsContentData() {
+    for (var field in formFields) {
+      final text = field.controller.text;
+      if (field.trackContent) {
+        field.faCn = text;
+      } else {
+        field.faCn = null;
+      }
+      if (text.isEmpty) {
+        field.faFb = true;
+      } else {
+        field.faFb = false;
+      }
+      field.faFs = text.length;
+    }
+  }
+
+  void trackForm() {
+    _calculateFieldsContentData();
+    final FormModel formModel = FormModel(
+      faSt: _startTime.millisecondsSinceEpoch.toString(),
+      faVid: _pageViewId,
+      faTs: _getTimeSpent(),
+      faHt: _formHesitationTime?.inMilliseconds.toString(),
+      faFields: formFields,
+    );
+    // for (final fields in formFields) {
+    //   debugPrint('type: ${fields.faFt} - content: ${fields.faCn}');
+    //   debugPrint('node changes: ${fields.faFf}');
+    //   debugPrint('changes: ${fields.faFch}');
+    //   debugPrint('Left blank: ${fields.faFb}');
+    //   debugPrint('deletes: ${fields.faFd}');
+    //   debugPrint('field hesitation time: ${fields.faFht}');
+    //   debugPrint('field spent time: ${fields.faFts}');
+    // }
+    MatomoTracker.instance.trackCustomForm(customActions: formModel.toJson());
+  }
+
+  String _getTimeSpent() =>
+      (DateTime.now().difference(_startTime)).inMilliseconds.toString();
+
+  Duration _timeSinceStart() {
+    return DateTime.now().difference(_startTime);
+  }
+
+  void dispose() {
+    _disposeDispatchTimer();
+    for (var i = 0; i < formFields.length; i++) {
+      _disposeNodeController(i);
     }
   }
 }
@@ -94,36 +199,11 @@ class FormFieldConfig {
     required this.formFieldType,
     required this.trackContent,
     required this.controller,
-  });
+    required this.node,
+  }) : id = const Uuid().v4();
+  final String id;
   final String formFieldType;
   final bool trackContent;
-  final TextEditingController controller;
-}
-
-class FormFieldTrackModel {
-  FormFieldTrackModel({
-    // required this.fa_fn,
-    // this.fa_cn,
-    this.totalTimeSpent,
-    this.hesitationTime,
-    this.leftBlank,
-    this.numberOfChanges,
-    this.numberOfFocus,
-    this.numberOfDeletes,
-    this.numberOfCursor,
-    this.formType,
-    this.size,
-  });
-
-  // final String fa_fn;
-  // String? fa_cn;
-  int? totalTimeSpent; // total time spent
-  int? hesitationTime; // hesitation time
-  bool? leftBlank; // left blank
-  int? numberOfChanges; // number of changes
-  int? numberOfFocus; // number of focus
-  int? numberOfDeletes; // number of deletes
-  int? numberOfCursor; // number of cursor
-  String? formType; // type
-  int? size; // size
+  TextEditingController controller;
+  final FocusNode node;
 }
