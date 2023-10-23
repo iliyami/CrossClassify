@@ -65,15 +65,17 @@ class _LoginDemoState extends State<LoginDemo> {
                 padding: const EdgeInsets.symmetric(horizontal: 15),
                 child: ControllableFormFieldWidget(
                   formFieldConfig: FormFieldConfig(
-                    formFieldType: 'Email',
+                    formFieldType: 'email',
                     trackContent: true,
                     controller: controller1,
                     node: focusNode1,
                   ),
-                  child: const TextField(
-                    decoration: InputDecoration(
+                  child: TextField(
+                    controller: controller1,
+                    focusNode: focusNode1,
+                    decoration: const InputDecoration(
                         border: OutlineInputBorder(),
-                        labelText: 'Email',
+                        labelText: 'email',
                         hintText: 'Enter valid email id as abc@gmail.com'),
                   ),
                 ),
@@ -83,14 +85,16 @@ class _LoginDemoState extends State<LoginDemo> {
                     left: 15.0, right: 15.0, top: 15, bottom: 0),
                 child: ControllableFormFieldWidget(
                   formFieldConfig: FormFieldConfig(
-                    formFieldType: 'Password',
+                    formFieldType: 'password',
                     trackContent: false,
                     controller: controller2,
                     node: focusNode2,
                   ),
-                  child: const TextField(
+                  child: TextField(
+                    controller: controller2,
+                    focusNode: focusNode2,
                     obscureText: true,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                         border: OutlineInputBorder(),
                         labelText: 'Password',
                         hintText: 'Enter secure password'),
