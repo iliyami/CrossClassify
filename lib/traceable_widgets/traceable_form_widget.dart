@@ -5,13 +5,13 @@ import 'package:matomo_tracker/utils/random_alpha_numeric.dart';
 class TraceableForm extends StatefulWidget {
   const TraceableForm({
     super.key,
-    this.formName,
+    required this.formName,
     this.path,
     this.performanceInfo,
     required this.child,
   });
 
-  final String? formName;
+  final String formName;
   final String? path;
   final PerformanceInfo? performanceInfo;
   final Widget child;

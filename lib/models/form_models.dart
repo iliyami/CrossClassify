@@ -8,12 +8,14 @@ part 'form_models.g.dart';
 
 class FormModel {
   FormModel({
+    required this.faName,
     required this.faFields,
     this.faEf,
     this.faVid,
     this.faSt,
     this.faHt,
     this.faTs,
+    required this.faSu,
   }) : faId = const Uuid().v4();
 
   Map<String, String> toJson() => _formModelToJson(this);
@@ -23,6 +25,9 @@ class FormModel {
 
   /// View ID
   final String? faVid;
+
+  /// Form name
+  final String faName;
 
   /// ID
   final String? faId;
@@ -39,9 +44,14 @@ class FormModel {
   /// Time spent
   final String? faTs;
 
+  /// Form submit status
+  final bool faSu;
+
   Map<String, String> _formModelToJson(FormModel instance) {
     final val = <String, String>{
+      'fa_name': faName,
       'fa_fields': json.encode(FormFieldModel.toJsonList(instance.faFields)),
+      'fa_su': faSu ? '1' : '0',
     };
 
     void writeNotNull(String key, dynamic value) {

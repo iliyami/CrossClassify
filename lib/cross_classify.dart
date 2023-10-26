@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:cross_classify_sdk/models/form_models.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:matomo_tracker/matomo_tracker.dart';
@@ -23,7 +25,7 @@ class CrossClassify {
   final _formInterval = const Duration(seconds: 30);
   Timer? _timer;
   late final DateTime _startTime;
-  late final String? _formName;
+  late final String _formName;
   late final PerformanceInfo? _performanceInfo;
   late final String _pageViewId;
   Duration? _formHesitationTime;
@@ -38,18 +40,18 @@ class CrossClassify {
     }
 
     await MatomoTracker.instance.initialize(
-      siteId: siteId,
-      url: _baseUrl + _matomoEndpoint,
-      customHeaders: {'x-api-key': apiKey},
-      verbosityLevel: kDebugMode ? Level.all : Level.off,
-    );
+        siteId: siteId,
+        url: _baseUrl + _matomoEndpoint,
+        customHeaders: {'x-api-key': apiKey},
+        verbosityLevel: kDebugMode ? Level.all : Level.off,
+        uid: await _getUid());
 
     _initialized = true;
   }
 
   void initForm({
     required String pvId,
-    required String? formName,
+    required String formName,
     required PerformanceInfo? performanceInfo,
   }) {
     _checkServiceInitialization();
@@ -57,6 +59,27 @@ class CrossClassify {
     _pageViewId = pvId;
     _formName = formName;
     _performanceInfo = performanceInfo;
+  }
+
+  Future<String> _getUid() async {
+    final deviceInfoPlugin = DeviceInfoPlugin();
+    if (kIsWeb == false) {
+      if (Platform.isAndroid) {
+        debugPrint(
+            'Fingerprint: ${(await deviceInfoPlugin.androidInfo).fingerprint.hashCode.toString()}');
+        return (await deviceInfoPlugin.androidInfo)
+            .fingerprint
+            .hashCode
+            .toString();
+      } else if (Platform.isIOS) {
+        final id = (await deviceInfoPlugin.iosInfo).identifierForVendor;
+        if (id == null) {
+          throw Exception('Failed to get the IOS identifier');
+        }
+        return id;
+      }
+    }
+    return (await deviceInfoPlugin.webBrowserInfo).userAgent!;
   }
 
   void _checkServiceInitialization() {
@@ -142,7 +165,7 @@ class CrossClassify {
   }
 
   void onFormSubmit() {
-    _trackForm();
+    _trackForm(isSubmitted: true);
     _disposeDispatchTimer();
   }
 
@@ -155,7 +178,7 @@ class CrossClassify {
       final text = field.controller.text;
       if (field.trackContent) {
         field.faCn = text;
-      } else {
+      } else if (field.faFt.toLowerCase() != 'email') {
         field.faCn = null;
       }
       if (text.isEmpty) {
@@ -167,16 +190,18 @@ class CrossClassify {
     }
   }
 
-  void _trackForm() {
+  void _trackForm({bool isSubmitted = false}) {
     _calculateFieldsContentData();
     final FormModel formModel = FormModel(
+      faName: _formName,
       faSt: _startTime.millisecondsSinceEpoch.toString(),
       faVid: _pageViewId,
       faTs: _getTimeSpent(),
       faHt: _formHesitationTime?.inMilliseconds.toString(),
       faFields: _formFields,
+      faSu: isSubmitted,
     );
-    // for (final fields in formFields) {
+    // for (final fields in _formFields) {
     //   debugPrint('type: ${fields.faFt} - content: ${fields.faCn}');
     //   debugPrint('node changes: ${fields.faFf}');
     //   debugPrint('changes: ${fields.faFch}');
@@ -186,11 +211,10 @@ class CrossClassify {
     //   debugPrint('field spent time: ${fields.faFts}');
     // }
     MatomoTracker.instance.trackCustomAction(
-      actionName: _formName,
-      pvId: _pageViewId,
-      performanceInfo: _performanceInfo,
-      customActions: formModel.toJson(),
-    );
+        actionName: _formName,
+        pvId: _pageViewId,
+        performanceInfo: _performanceInfo,
+        customActions: formModel.toJson());
   }
 
   String _getTimeSpent() =>
