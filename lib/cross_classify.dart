@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:cross_classify_sdk/models/form_models.dart';
@@ -8,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:matomo_tracker/matomo_tracker.dart';
 import 'package:uuid/uuid.dart';
 export 'package:matomo_tracker/matomo_tracker.dart';
+import 'package:crypto/crypto.dart';
 
 RouteObserver<ModalRoute<void>> get crossClassifyObserver => matomoObserver;
 
@@ -65,12 +67,11 @@ class CrossClassify {
     final deviceInfoPlugin = DeviceInfoPlugin();
     if (kIsWeb == false) {
       if (Platform.isAndroid) {
-        debugPrint(
-            'Fingerprint: ${(await deviceInfoPlugin.androidInfo).fingerprint.hashCode.toString()}');
-        return (await deviceInfoPlugin.androidInfo)
-            .fingerprint
-            .hashCode
-            .toString();
+        final androidInfo = await deviceInfoPlugin.androidInfo;
+        final fingerprint =
+            sha256.convert(utf8.encode(androidInfo.fingerprint));
+        debugPrint('Fingerprint: ${fingerprint.toString()}');
+        return fingerprint.toString();
       } else if (Platform.isIOS) {
         final id = (await deviceInfoPlugin.iosInfo).identifierForVendor;
         if (id == null) {
