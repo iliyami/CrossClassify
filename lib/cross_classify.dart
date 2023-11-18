@@ -68,8 +68,22 @@ class CrossClassify {
     if (kIsWeb == false) {
       if (Platform.isAndroid) {
         final androidInfo = await deviceInfoPlugin.androidInfo;
-        final fingerprint =
-            sha256.convert(utf8.encode(androidInfo.fingerprint));
+        final fingerprint = sha256.convert(utf8.encode(
+          androidInfo.board +
+              androidInfo.brand +
+              androidInfo.device +
+              androidInfo.hardware +
+              androidInfo.manufacturer +
+              androidInfo.product +
+              androidInfo.display +
+              androidInfo.host +
+              androidInfo.model +
+              androidInfo.id +
+              androidInfo.brand +
+              androidInfo.serialNumber +
+              androidInfo.displayMetrics.heightPx.toString() +
+              androidInfo.displayMetrics.widthPx.toString(),
+        ));
         debugPrint('Fingerprint: ${fingerprint.toString()}');
         return fingerprint.toString();
       } else if (Platform.isIOS) {
