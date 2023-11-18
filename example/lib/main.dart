@@ -3,6 +3,9 @@ import 'package:cross_classify_sdk/traceable_widgets/traceable_form_field_widget
 import 'package:cross_classify_sdk/traceable_widgets/traceable_form_widget.dart';
 import 'package:example/home_page.dart';
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+
+late final String appVersion;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -12,6 +15,8 @@ void main() async {
     apiKey: '#Your_API_Key',
     siteId: -1,
   );
+
+  appVersion = (await PackageInfo.fromPlatform()).buildNumber;
 
   runApp(const MyApp());
 }
@@ -120,6 +125,8 @@ class _LoginDemoState extends State<LoginDemo> {
                   ),
                 ),
               ),
+              const SizedBox(height: 8),
+              Text(appVersion),
             ],
           ),
         ),

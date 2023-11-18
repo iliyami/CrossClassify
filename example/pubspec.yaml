@@ -34,6 +34,7 @@ dependencies:
 
   cross_classify_sdk:
     path: ..
+  package_info_plus: ^4.2.0
 
 dev_dependencies:
   flutter_test:
