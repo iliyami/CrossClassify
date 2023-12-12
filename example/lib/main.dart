@@ -12,7 +12,7 @@ void main() async {
 
   // Enter your API Key and SiteId here!
   await CrossClassify.instance.initialize(
-    apiKey: '#Your_API_Key',
+    apiKey: 'API_KEY_HERE',
     siteId: -1,
   );
 
