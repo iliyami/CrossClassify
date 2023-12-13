@@ -75,7 +75,7 @@ class CrossClassify {
               androidInfo.hardware +
               androidInfo.manufacturer +
               androidInfo.product +
-              androidInfo.display +
+              //androidInfo.display +
               androidInfo.host +
               androidInfo.model +
               androidInfo.id +
